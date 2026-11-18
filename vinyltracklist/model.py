@@ -179,11 +179,13 @@ class Project(object):
 
     # --- edició ----------------------------------------------------------
     def add_files(self, side_name, paths):
-        """Afegeix WAV a una cara i la reordena sencera alfabèticament pel nom del fitxer."""
+        """Afegeix WAV al final de la cara, ordenats alfabèticament entre ells.
+
+        Els temes que ja hi eren no canvien d'ordre (ni perden les pauses pròpies).
+        Si la cara és buida, queda tota en ordre alfabètic."""
         side = self.side(side_name)
-        new = [Track(p) for p in paths]
+        new = [Track(p) for p in sorted(paths, key=filename_key)]
         side.tracks.extend(new)
-        self.sort_side(side_name)
         return new
 
     def sort_side(self, side_name):
