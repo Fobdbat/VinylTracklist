@@ -181,14 +181,20 @@ class ModelTests(unittest.TestCase):
         for s in ("Recommended", "WARNING", "(!)", "EXCEEDS", "*"):
             self.assertNotIn(s, f)
 
-    def test_sort_whole_side(self):
+    def test_add_appends_and_keeps_order(self):
         p = Project(self.cfg)
+        # Cara buida: el lot queda en ordre alfabètic
         p.add_files("A", [make(self.d, n, 5) for n in ("B10.wav", "b2.wav", "Àlex.wav", "a1.wav")])
         names = lambda: [os.path.basename(t.path) for t in p.side("A").tracks]  # noqa: E731
         self.assertEqual(names(), ["a1.wav", "Àlex.wav", "b2.wav", "B10.wav"])
-        p.shift(p.side("A").tracks[0].id, 1)          # ordre manual...
-        p.add_files("A", [make(self.d, "a0.wav", 5)])  # ...afegir reordena la cara sencera
-        self.assertEqual(names(), ["a0.wav", "a1.wav", "Àlex.wav", "b2.wav", "B10.wav"])
+        # Ordre manual i una pausa pròpia...
+        p.shift(p.side("A").tracks[0].id, 1)
+        p.side("A").tracks[0].pause_after = 4.5
+        before = names()
+        # ...afegir-ne de nous: van al final, ordenats entre ells, i no es toca res més
+        p.add_files("A", [make(self.d, n, 5) for n in ("z9.wav", "a0.wav")])
+        self.assertEqual(names(), before + ["a0.wav", "z9.wav"])
+        self.assertEqual(p.side("A").tracks[0].pause_after, 4.5)
 
     def test_fmt_dur(self):
         self.assertEqual(fmt_dur(59.4), "0:59")
